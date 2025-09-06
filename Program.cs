@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -33,16 +34,17 @@ internal class Program
         }
         return [.. list];
     }
-    private static void GetDIFFItemsAndCopy(string folder, Dictionary<string, string> dictionary)
+    private static void GetDIFFItemsAndCopy(string folder, string[] dict)
     {
         string[] files = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories);
         List<string> list = new List<string>();
         foreach (string file in files)
         {
             string sHA2 = GetSHA256(file);
-            if (!dictionary.ContainsKey(sHA2))
+            string rp = Path.GetRelativePath(folder, file);
+            string value = rp + "?" + sHA2;
+            if (!dict.Contains(value))
             {
-                string rp = Path.GetRelativePath(folder, file);
                 list.Add(rp);
                 Console.WriteLine("不同的文件：" + rp);
             }
@@ -87,12 +89,7 @@ internal class Program
             string newfolder = Console.ReadLine()!.Trim('\"');
             Console.WriteLine("输入sha256list文件路径：");
             string[] array2 = File.ReadAllLines(Console.ReadLine()!.Trim('\"').Replace("\"", ""));
-            Dictionary<string, string> dictionary = [];//path,sha256
-            foreach (string text5 in array2)
-            {
-                dictionary.TryAdd(text5.Split('?')[1], text5.Split('?')[0]);
-            }
-            GetDIFFItemsAndCopy(newfolder,dictionary);
+            GetDIFFItemsAndCopy(newfolder,array2);
             return;
         }
         else
